@@ -1,16 +1,25 @@
+import 'dotenv/config';
 import express from "express";
 import dotenv from "dotenv";
+import http from "http";
+import cors from "cors";
+import { Server } from "socket.io";
 import { prisma } from "../src/config/prisma.js";
+import { registerGameSockets } from "./modules/sockets/game.socket.js";
 
 dotenv.config();
 
 const app = express();
-
+app.use(cors());
 app.use(express.json());
 
-app.get("/", (_req, res) => {
-  res.send("API running");
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: { origin: "*" },
 });
+
+registerGameSockets(io);
 
 const PORT = process.env.PORT || 4000;
 
@@ -19,7 +28,7 @@ async function start() {
     await prisma.$connect();
     console.log("DB connected");
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
   } catch (err) {
