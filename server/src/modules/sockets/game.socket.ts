@@ -12,6 +12,15 @@ import {
   getActiveMatch,
   removeActiveMatch,
 } from "../match/activeMatch.store.js";
+import {
+  markPlayerReady,
+  getReadyPlayers,
+  clearReady,
+} from "../game/ready.store.js";
+import { createRoundState } from "../game/round.factory.js";
+import { createRound } from "../game/round.store.js";
+import { startTickEngine } from "../game/tick.engine.js";
+import { handleGuess } from "../game/guess.handler.js";
 
 export function registerGameSockets(io: Server) {
   io.on("connection", (socket: Socket) => {
@@ -43,11 +52,17 @@ export function registerGameSockets(io: Server) {
           }
 
           socket.join(existingMatch.matchId);
+          console.log("Rooms for socket:", socket.rooms);
 
           socket.emit("reconnected", {
             matchId: existingMatch.matchId,
+            players: existingMatch.players,
           });
 
+          socket.to(existingMatch.matchId).emit("player_rejoined", {
+            playerId: player.id,
+          });
+          console.log("Player rejoined room:", existingMatch.matchId);
           return;
         }
 
@@ -98,6 +113,43 @@ export function registerGameSockets(io: Server) {
       }
     });
 
+    //Ready Event
+    socket.on("ready", () => {
+      const playerId = socket.data.playerId;
+      if (!playerId) return;
+
+      const match = findMatchByPlayer(playerId);
+      if (!match) return;
+
+      markPlayerReady(match.matchId, playerId);
+
+      const readyPlayers = getReadyPlayers(match.matchId);
+
+      // Start round when both ready
+      if (readyPlayers.size === match.players.length) {
+        const round = createRoundState(match.matchId, match.players);
+        createRound(round);
+        clearReady(match.matchId);
+
+        io.to(match.matchId).emit("round_start", {
+          wordLength: round.word.length,
+        });
+
+        startTickEngine(io, match.matchId);
+      }
+    });
+
+    //Submit Guess
+    socket.on("submit_guess", ({ guess }) => {
+      const playerId = socket.data.playerId;
+      if (!playerId || !guess) return;
+
+      const match = findMatchByPlayer(playerId);
+      if (!match) return;
+
+      handleGuess(io, match.matchId, playerId, guess);
+    });
+
     //Disconnect and match forfeit
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
@@ -114,6 +166,19 @@ export function registerGameSockets(io: Server) {
         return;
       }
 
+      const opponentId = match.players.find((p) => p !== playerId);
+      if (!opponentId) return;
+      const opponentSocket = match.sockets.get(opponentId);
+
+      // when both players disconnect
+      if (!opponentSocket) {
+        console.log("Both players disconnected — ending match");
+
+        io.to(match.matchId).emit("match_abandoned");
+
+        removeActiveMatch(match.matchId);
+        return;
+      }
       console.log("Starting grace timer for player:", playerId);
 
       const timer = setTimeout(() => {
