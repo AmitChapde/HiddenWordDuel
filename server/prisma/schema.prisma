@@ -12,71 +12,73 @@ enum MatchStatus {
   completed
 }
 
-
-model Player {
-  id String @id @default(uuid())
-  username  String  @unique
-  createdAt DateTime  @default(now())
-
-  // relations
-  matches1  Match[] @relation("player1")
-  matches2  Match[] @relation("player2")
-  guesses Guess[]
-
-  wonRounds Round[] @relation("RoundWinner")
+enum RoundStatus {
+  active
+  completed
 }
 
+model Player {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  createdAt DateTime @default(now())
 
+  matches1 Match[] @relation("player1")
+  matches2 Match[] @relation("player2")
+  guesses  Guess[] @relation("guesses")
+
+  wonRounds  Round[] @relation("winner")
+  wonMatches Match[] @relation("matchWinner")
+}
 
 model Match {
-  id  String  @id @default(uuid())
+  id        String      @id @default(uuid())
   player1Id String
   player2Id String
+  winnerId  String?
+  score1    Int         @default(0)
+  score2    Int         @default(0)
+  status    MatchStatus @default(ongoing)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
-  score1  Int @default(0)
-  score2  Int @default(0)
+  player1 Player @relation("player1", fields: [player1Id], references: [id])
+  player2 Player @relation("player2", fields: [player2Id], references: [id])
 
-  status  MatchStatus @default(ongoing)
+  winner Player? @relation("matchWinner", fields: [winnerId], references: [id])
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  // relations
-  player1 Player @relation("player1",fields:[player1Id],references:[id])
-  player2 Player @relation("player2",fields:[player2Id],references:[id])
-
-  rounds Round[]
+  rounds Round[] @relation("rounds")
 }
 
 model Round {
-  id            String   @id @default(uuid())
+  id            String      @id @default(uuid())
   matchId       String
+  roundNumber   Int
   word          String
   revealedTiles Boolean[]
-  winnerId      String?   
-  roundNumber   Int
+  winnerId      String?
+  maskedWord    String
+  status        RoundStatus @default(active)
+  createdAt     DateTime    @default(now())
+  endedAt       DateTime?
 
-  createdAt DateTime @default(now())
-  endedAt   DateTime?
+  match   Match   @relation("rounds", fields: [matchId], references: [id])
+  winner  Player? @relation("winner", fields: [winnerId], references: [id])
+  guesses Guess[] @relation("guesses")
 
-  // relations
-  match   Match   @relation(fields: [matchId], references: [id])
-  guesses Guess[]
-
-  winner Player? @relation("RoundWinner", fields: [winnerId], references: [id])
+  @@unique([matchId, roundNumber])
+  @@index([matchId])
 }
 
 model Guess {
-  id  String  @id @default(uuid())
-  roundId String
+  id        String   @id @default(uuid())
+  roundId   String
   playerId  String
-  guess String
+  guess     String
   isCorrect Boolean
   createdAt DateTime @default(now())
 
-  // relations
-  round Round @relation(fields:[roundId],references:[id])
-  player  Player  @relation(fields:[playerId],references:[id])
+  round  Round  @relation("guesses", fields: [roundId], references: [id])
+  player Player @relation("guesses", fields: [playerId], references: [id])
 
   @@index([roundId])
   @@index([playerId])

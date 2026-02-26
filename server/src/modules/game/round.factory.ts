@@ -1,10 +1,12 @@
 import { RoundState } from "../../types/types.js";
 import { pickRandomWord, maskWord } from "./word.engine.js";
+import { randomUUID } from "crypto";
 
 export function createRoundState(
   matchId: string,
   playerIds: string[],
 ): RoundState {
+  const id = randomUUID();
   const word = pickRandomWord();
   const maskedWord = maskWord(word);
 
@@ -19,6 +21,7 @@ export function createRoundState(
   });
 
   return {
+    id,
     matchId,
     word,
     maskedWord,
@@ -28,5 +31,7 @@ export function createRoundState(
     guessesThisTick: new Map(),
     startedAt: Date.now(),
     isRoundOver: false,
+    winnerId: undefined, 
+    status:"active"
   };
 }

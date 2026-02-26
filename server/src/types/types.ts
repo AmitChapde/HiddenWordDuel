@@ -6,12 +6,16 @@ export type WaitingPlayer = {
 
 export type ActiveMatch = {
   matchId: string;
+  player1Id: string;
+  player2Id: string;
   players: string[];
   sockets: Map<string, string>;
   disconnectTimers: Map<string, NodeJS.Timeout>;
   scores: Record<string, number>;
+    hasStarted: boolean;
   roundNumber: number;
   nextRoundScheduled?: boolean;
+    nextRoundTimer?: NodeJS.Timeout | null;
 };
 
 export type PlayerId = string;
@@ -31,6 +35,7 @@ export interface TickGuess {
 }
 
 export interface RoundState {
+   id: string;
   matchId: MatchId;
   word: string;
   maskedWord: string[];
@@ -40,5 +45,9 @@ export interface RoundState {
   guessesThisTick: Map<PlayerId, TickGuess>;
   startedAt: number;
   tickInterval?: NodeJS.Timeout;
+  tickStartedAt?: number;
+  tickEndsAt?: number;
   isRoundOver: boolean;
+  winnerId: PlayerId | null | undefined;
+  status: "active" | "completed";
 }

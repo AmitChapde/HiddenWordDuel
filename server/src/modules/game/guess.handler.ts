@@ -1,42 +1,68 @@
 import { Server } from "socket.io";
 import { getRound } from "./round.store.js";
+import { persistGuess } from "./guess.service.js";
+import { getActiveMatch } from "../match/activeMatch.store.js";
 
-/**
- * Handles incoming guesses.
- * This file ONLY:
- * - Validates input
- * - Enforces anti-spam rules
- * - Stores guess for tick arbitration
- *
- * Winner resolution is handled inside tick.engine.ts
- */
-export function handleGuess(
+export async function handleGuess(
   io: Server,
   matchId: string,
   playerId: string,
-  guess: string
+  guess: string,
 ) {
+  console.log("[handleGuess] fired", { matchId, playerId, guess });
   const round = getRound(matchId);
   if (!round || round.isRoundOver) return;
+
+  const match = getActiveMatch(matchId);
+  if (!match) return;
 
   const player = round.players[playerId];
   if (!player) return;
 
+  const now = Date.now();
+
+  if (
+    typeof (round as any).tickEndsAt === "number" &&
+    now > (round as any).tickEndsAt
+  ) {
+    io.to(matchId).emit("guess_rejected", {
+      playerId,
+      reason: "late_submission",
+    });
+    return;
+  }
+
   const currentTick = round.tick;
 
-  // Prevent multiple guesses in same tick
+  // One guess per tick (keep)
   if (player.lastGuessTick === currentTick) return;
 
-  // Prevent duplicate spam guesses
-  if (player.lastGuess === guess) return;
-
+  const normalizedGuess = String(guess).trim().toUpperCase();
   player.lastGuessTick = currentTick;
-  player.lastGuess = guess;
+  player.lastGuess = normalizedGuess;
 
-  // Store guess for tick arbitration
+  const isCorrect = normalizedGuess === round.word;
+
+  const roundId = round.id;
+
+  console.log("[persistGuess] about to save", {
+    roundId,
+    playerId,
+    normalizedGuess,
+    isCorrect,
+  });
+
+  // Persist guess
+  await persistGuess({
+    roundId,
+    playerId,
+    guess: normalizedGuess,
+    isCorrect,
+  });
+
   round.guessesThisTick.set(playerId, {
     playerId,
-    guess,
-    timestamp: Date.now(),
+    guess: normalizedGuess,
+    timestamp: now,
   });
 }

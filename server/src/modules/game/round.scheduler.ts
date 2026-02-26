@@ -1,48 +1,104 @@
 import { Server } from "socket.io";
-import { createRoundState } from "./round.factory.js";
-import { createRound } from "./round.store.js";
+import { ActiveMatch } from "../../types/types.js";
+import {
+  getActiveMatch,
+  removeActiveMatch,
+} from "../match/activeMatch.store.js";
+import { getRound, createRound } from "./round.store.js";
+import { createRoundState } from "../game/round.factory.js";
+import { initRoundInDb } from "./round.service.js";
 import { startTickEngine } from "./tick.engine.js";
-import { getActiveMatch } from "../match/activeMatch.store.js";
 
-const ROUND_BUFFER = 6000;
+export const ROUND_BUFFER_MS = 3000;
+export const MAX_ROUNDS = 5;
+export const TARGET_SCORE = 3;
 
-/**
- * Schedules next round safely
- * Guards against:
- * - Zombie timers
- * - Match-end races
- * - Duplicate scheduling
- */
-export function scheduleNextRound(io: Server, match: any) {
-  if (!match) return;
+function getWinnerByScore(match: ActiveMatch): string | null {
+  const [p1, p2] = match.players;
+  const s1 = match.scores[p1] ?? 0;
+  const s2 = match.scores[p2] ?? 0;
+  if (s1 === s2) return null;
+  return s1 > s2 ? p1 : p2;
+}
 
-  const matchId = match.matchId;
+function hasReachedTargetScore(match: ActiveMatch): boolean {
+  return Object.values(match.scores).some((s) => (s ?? 0) >= TARGET_SCORE);
+}
 
+export function scheduleNextRound(
+  io: Server,
+  match: ActiveMatch,
+  delayMs: number = ROUND_BUFFER_MS,
+) {
   if (match.nextRoundScheduled) return;
   match.nextRoundScheduled = true;
 
-  setTimeout(() => {
-    const current = getActiveMatch(matchId);
+  // Cancel any previous timer just in case
+  if (match.nextRoundTimer) clearTimeout(match.nextRoundTimer);
 
-    // Match deleted → stop
-    if (!current) return;
+  match.nextRoundTimer = setTimeout(async () => {
+    try {
+      const currentMatch = getActiveMatch(match.matchId);
+      if (!currentMatch) return;
 
-    // Stale reference → stop
-    if (current !== match) return;
+      // End conditions (emit match_end from HERE only)
+      if (
+        currentMatch.roundNumber >= MAX_ROUNDS ||
+        hasReachedTargetScore(currentMatch)
+      ) {
+        const winnerId = getWinnerByScore(currentMatch);
 
-    current.nextRoundScheduled = false;
+        io.to(currentMatch.matchId).emit("match_end", {
+          winnerId,
+          finalScores: currentMatch.scores,
+          reason:
+            currentMatch.roundNumber >= MAX_ROUNDS
+              ? "max_rounds"
+              : "target_score",
+        });
 
-    current.roundNumber += 1;
+        removeActiveMatch(currentMatch.matchId);
+        return;
+      }
 
-    const round = createRoundState(matchId, current.players);
-    createRound(round);
+      // If a round is currently active, do not start another
+      const existingRound = getRound(currentMatch.matchId);
+      if (existingRound && !existingRound.isRoundOver) return;
 
-    io.to(matchId).emit("round_start", {
-      roundNumber: current.roundNumber,
-      wordLength: round.word.length,
-      scores: current.scores,
-    });
+      // Start next round
+      const round = createRoundState(
+        currentMatch.matchId,
+        currentMatch.players,
+      );
+      createRound(round);
 
-    startTickEngine(io, matchId);
-  }, ROUND_BUFFER);
+      currentMatch.roundNumber += 1;
+
+      await initRoundInDb(currentMatch.matchId, round);
+
+      io.to(currentMatch.matchId).emit("round_start", {
+        roundNumber: currentMatch.roundNumber,
+        wordLength: round.word.length,
+      });
+      console.log("[scheduler] fired", {
+        matchId: currentMatch.matchId,
+        roundNumber: currentMatch.roundNumber,
+        scores: currentMatch.scores,
+        nextRoundScheduled: currentMatch.nextRoundScheduled,
+      });
+
+      startTickEngine(io, currentMatch.matchId);
+    } catch (err) {
+      console.error("[scheduleNextRound] failed:", err);
+      io.to(match.matchId).emit("server_error", {
+        message: "Failed to start next round.",
+      });
+    } finally {
+      const m = getActiveMatch(match.matchId);
+      if (m) {
+        m.nextRoundScheduled = false;
+        m.nextRoundTimer = null;
+      }
+    }
+  }, delayMs);
 }
