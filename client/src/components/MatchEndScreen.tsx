@@ -1,26 +1,32 @@
 import { useGameContext } from "../contexts/GameContext";
+import type { MatchEndPayload } from "../types/socket";
+import { getWinnerName } from "../utils/player.utils";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
-  payload: any;
+  payload: MatchEndPayload | null;
 }
 
 const MatchEndScreen = ({ payload }: Props) => {
-  const { match } = useGameContext();
+  const navigate = useNavigate();
+  const { match, setMatch } = useGameContext();
+
   if (!payload || !match) return null;
 
-  const winner = match.players.find(p => p.id === payload.winnerId);
+  const winnerName=getWinnerName(match);
+
+  const handleReplay = () => {
+    setMatch(null);
+    navigate("/");
+  };
 
   return (
     <div className="match-end">
       <h1>🏆 Match Over</h1>
 
-      <p>Winner: {winner?.username ?? "Draw"}</p>
+      <p>Winner: {winnerName}</p>
 
-      {/* <pre>{JSON.stringify(finalScores, null, 2)}</pre> */}
-
-      <button onClick={() => window.location.reload()}>
-        Play Again
-      </button>
+      <button onClick={handleReplay}>Play Again</button>
     </div>
   );
 };

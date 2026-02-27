@@ -1,13 +1,12 @@
-import { createContext, useContext, useState} from "react";
+import { createContext, useContext, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import type { ReactNode } from "react";
 import type { MatchState } from "../types/game";
 
 interface GameContextType {
   match: MatchState | null;
-  setMatch: (match: MatchState | null) => void;
-  setRound: (
-    updater: (prev: MatchState | null) => MatchState | null
-  ) => void;
+  setMatch: Dispatch<SetStateAction<MatchState | null>>;
+  updateMatch: (updater: (prev: MatchState | null) => MatchState | null) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -15,14 +14,14 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [match, setMatch] = useState<MatchState | null>(null);
 
-  const setRound = (
-    updater: (prev: MatchState | null) => MatchState | null
+  const updateMatch = (
+    updater: (prev: MatchState | null) => MatchState | null,
   ) => {
     setMatch((prev) => updater(prev));
   };
 
   return (
-    <GameContext.Provider value={{ match, setMatch, setRound }}>
+    <GameContext.Provider value={{ match, setMatch,updateMatch }}>
       {children}
     </GameContext.Provider>
   );

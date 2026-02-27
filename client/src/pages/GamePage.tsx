@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { socket } from "../socket/socket";
 import { useGameContext } from "../contexts/GameContext";
-
 import RoundPlaying from "../components/RoundPlaying";
 import RoundResultScreen from "../components/RoundResultScreen";
 import MatchEndScreen from "../components/MatchEndScreen";
 import ReadyScreen from "../components/ReadyScreen";
-import {
-  createInitialTiles,
-  maskedWordToTiles,
-} from "../adapters/round.adapter";
+import { maskedWordToTiles } from "../adapters/round.adapter";
+import type {
+  RoundStartPayload,
+  TickPayload,
+  RoundResultPayload,
+  MatchEndPayload,
+} from "../types/socket";
 
 type GamePhase =
   | "LOBBY"
@@ -19,17 +21,17 @@ type GamePhase =
   | "MATCH_END";
 
 const GamePage = () => {
-  const { match, setRound } = useGameContext();
+  const { match, updateMatch, setMatch } = useGameContext();
   const [phase, setPhase] = useState<GamePhase>(match ? "READY" : "LOBBY");
   const [hasGuessed, setHasGuessed] = useState(false);
-  const [roundResult, setRoundResult] = useState<any>(null);
-  const [matchEndPayload, setMatchEndPayload] = useState<any>(null);
+  const [roundResult, setRoundResult] = useState<RoundResultPayload|null>(null);
+  const [matchEndPayload, setMatchEndPayload] =   useState<MatchEndPayload | null>(null);
 
   useEffect(() => {
-    const onRoundStart = (payload: any) => {
+    const onRoundStart = (payload: RoundStartPayload) => {
       console.log("ROUND START RECEIVED", payload);
 
-      setRound((prev) => {
+      updateMatch((prev) => {
         if (!prev) return prev;
 
         const tiles = Array(payload.wordLength)
@@ -53,10 +55,10 @@ const GamePage = () => {
       setPhase("ROUND_PLAYING");
     };
 
-    const onTick = (payload: any) => {
+    const onTick = (payload: TickPayload) => {
       setHasGuessed(false);
 
-      setRound((prev) => {
+      updateMatch((prev) => {
         if (!prev?.currentRound) return prev;
 
         return {
@@ -70,13 +72,31 @@ const GamePage = () => {
       });
     };
 
-    const onRoundResult = (payload: any) => {
+    const onRoundResult = (payload: RoundResultPayload) => {
       setRoundResult(payload);
+
+      setMatch((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          scores: payload.scores,
+        };
+      });
+
       setPhase("ROUND_RESULT");
     };
 
-    const onMatchEnd = (payload: any) => {
+    const onMatchEnd = (payload: MatchEndPayload) => {
       setMatchEndPayload(payload);
+
+      setMatch((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          scores: payload.finalScores,
+        };
+      });
+
       setPhase("MATCH_END");
     };
 

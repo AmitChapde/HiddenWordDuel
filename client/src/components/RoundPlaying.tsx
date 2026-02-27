@@ -3,6 +3,7 @@ import TileGrid from "./TileGrid";
 import GuessInput from "./GuessInput";
 import TimeBar from "./TimerBar";
 import PlayerStatus from "./PlayerStatus";
+import Scoreboard from "./Scoreboard";
 
 interface Props {
   hasGuessed: boolean;
@@ -18,6 +19,8 @@ const RoundPlaying = ({ hasGuessed, onGuess }: Props) => {
   return (
     <div>
       <PlayerStatus players={match.players} />
+
+      <Scoreboard />
 
       <h3>Round {round.roundNumber}</h3>
 

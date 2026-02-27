@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import "dotenv/config";
 import express from "express";
 import dotenv from "dotenv";
 import http from "http";
@@ -12,6 +12,14 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.get("/", (_, res) => {
+  res.send("Hidden Word Duel server running");
+});
+
+app.get("/health", (_, res) => {
+  res.json({ status: "ok" });
+});
 
 const server = http.createServer(app);
 

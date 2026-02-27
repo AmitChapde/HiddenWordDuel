@@ -1,17 +1,30 @@
+import { useGameContext } from "../contexts/GameContext";
+import type { RoundResultPayload } from "../types/socket";
+
 interface Props {
-  result: any;
+  result: RoundResultPayload | null;
 }
 
 const RoundResultScreen = ({ result }: Props) => {
-  if (!result) return null;
+  const { match } = useGameContext();
+  if (!result || !match) return null;
 
-  const { winnerId, word } = result;
+  const winnerId = result.winnerId;
+
+  const player = match.players.find(
+    (p) => p.id === winnerId || p.id === winnerId,
+  );
+
+  const winnerName = player?.username ?? "Draw";
+  console.log("SCORES IN CONTEXT", match.scores);
+  console.log("winnerId", result.winnerId);
+  console.log("players", match.players);
 
   return (
     <div className="round-result">
       <h2>Round Complete</h2>
-      <p>Word was: {word}</p>
-      {winnerId ? <p>Winner decided 🎉</p> : <p>Draw!</p>}
+      <p>Word was: {result.word}</p>
+      <p>Winner: {winnerName}</p>
     </div>
   );
 };

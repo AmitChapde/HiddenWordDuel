@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { socket } from "../socket/socket";
 import { useGameContext } from "../contexts/GameContext";
 import { SOCKET_EVENTS } from "../socket/events";
+import type { MatchFoundPayload, ReconnectPayload } from "../types/socket";
 
 const LobbyPage = () => {
   const navigate = useNavigate();
@@ -12,22 +13,20 @@ const LobbyPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [status, setStatus] = useState("");
 
-
-
   useEffect(() => {
     const handleWaiting = () => {
       console.log("Waiting for opponent...");
       setStatus("Waiting for opponent...");
     };
 
-    const handleMatchFound = (payload: any) => {
+    const handleMatchFound = (payload: MatchFoundPayload) => {
       console.log("🎉 Match found:", payload);
 
       setMatch({
         matchId: payload.matchId,
-        players: payload.players.map((name: string, i: number) => ({
-          id: String(i), 
-          username: name,
+        players: payload.players.map((player) => ({
+          id: player.id,
+          username: player.username,
         })),
         status: "playing",
       });
@@ -35,15 +34,15 @@ const LobbyPage = () => {
       navigate("/game");
     };
 
-    const handleReconnect = (payload: any) => {
-      console.log("🔁 Reconnected:", payload);
+    const handleReconnect = (payload: ReconnectPayload) => {
+      const players = payload.players.map((p) => ({
+        id: p.id,
+        username: p.username,
+      }));
 
       setMatch({
         matchId: payload.matchId,
-        players: payload.players.map((p: any) => ({
-          id: p.id,
-          username: p.username,
-        })),
+        players,
         status: "playing",
       });
 
@@ -74,7 +73,7 @@ const LobbyPage = () => {
 
   return (
     <div className="lobby-container">
-      <h1>Hidden Word Duel</h1>
+      <h1>LexiClash</h1>
 
       <input
         placeholder="Enter username"

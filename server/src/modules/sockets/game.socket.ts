@@ -1,3 +1,4 @@
+console.log("REGISTERING GAME SOCKETS");
 import { Server, Socket } from "socket.io";
 import { findOrCreatePlayer } from "../player/player.service.js";
 import {
@@ -82,7 +83,7 @@ export function registerGameSockets(io: Server) {
 
         try {
           const match = await createMatch(p1.playerId, p2.playerId);
-          const roomId = match.id; 
+          const roomId = match.id;
 
           createActiveMatch(roomId, p1.playerId, p2.playerId);
           const active = getActiveMatch(roomId)!;
@@ -107,7 +108,10 @@ export function registerGameSockets(io: Server) {
           io.to(roomId).emit("match_found", {
             roomId, // keeping your existing client payload
             matchId: roomId, // also provide matchId to reduce confusion
-            players: [p1.username, p2.username],
+            players: [
+              { id: p1.playerId, username: p1.username },
+              { id: p2.playerId, username: p2.username },
+            ],
           });
 
           console.log(`Match created: ${roomId}`);
