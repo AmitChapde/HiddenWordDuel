@@ -9,7 +9,7 @@ import { getActiveMatch } from "../match/activeMatch.store.js";
  * @param playerId - The ID of the player making the guess.
  * @param guess - The player's guess as a string.
  * @returns void
-*/
+ */
 
 export async function handleGuess(
   io: Server,
@@ -19,7 +19,7 @@ export async function handleGuess(
 ) {
   console.log("[handleGuess] fired", { matchId, playerId, guess });
   const round = getRound(matchId);
-  // 1. Safety check: prevent guesses if round is null or already finished
+  // Safety check: prevent guesses if round is null or already finished
   if (!round || round.isRoundOver) return;
 
   const match = getActiveMatch(matchId);
@@ -30,11 +30,8 @@ export async function handleGuess(
 
   const now = Date.now();
 
-  // 2. Time-based validation
-  if (
-    typeof (round as any).tickEndsAt === "number" &&
-    now > (round as any).tickEndsAt
-  ) {
+  // Time-based validation
+  if (typeof round.tickEndsAt === "number" && now > round.tickEndsAt) {
     io.to(matchId).emit("guess_rejected", {
       playerId,
       reason: "late_submission",
@@ -52,7 +49,7 @@ export async function handleGuess(
   const isCorrect = normalizedGuess === round.word;
   const roundId = round.id;
 
-  // 3. Save to Database 
+  // Save to Database
   await persistGuess({
     roundId,
     playerId,

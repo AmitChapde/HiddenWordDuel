@@ -1,20 +1,15 @@
 /**
- * Multiplayer Socket.IO CLI Test Client
+ * Socket Test Client
+ * Internal debugging utility used to simulate players
+ * and test realtime matchmaking and round lifecycle.
  *
- * Usage:
- * node scripts/test-client.js Amit
- * node scripts/test-client.js Rahul
- *
- * Commands inside terminal:
- * r -> send ready
- * g:WORD -> submit guess
- * x -> disconnect
+ * Not part of production runtime.
  */
 
 import { io } from "socket.io-client";
 import readline from "readline";
 
-const username = process.argv[2] || "Bot";
+const username = process.argv[2] ;
 
 const socket = io("http://localhost:5000");
 

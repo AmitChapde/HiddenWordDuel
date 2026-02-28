@@ -1,4 +1,3 @@
-console.log("REGISTERING GAME SOCKETS");
 import { Server, Socket } from "socket.io";
 import { findOrCreatePlayer } from "../player/player.service.js";
 import {

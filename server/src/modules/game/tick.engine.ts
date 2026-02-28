@@ -9,18 +9,18 @@ import {
   ROUND_BUFFER_MS,
 } from "./round.scheduler.js";
 import { completeRoundInDb } from "./round.service.js";
-
 const GUESS_WINDOW = 15000;
+import type { RoundWithEngine } from "../../types/types.js";
 
 export function startTickEngine(io: Server, matchId: string) {
-  const round = getRound(matchId);
+  const round = getRound(matchId) as RoundWithEngine;
   if (!round) return;
 
   // Prevent double intervals for same round instance
-  if ((round as any).tickInterval) return;
+  if (round.tickInterval) return;
 
-  (round as any).tickStartedAt = Date.now();
-  (round as any).tickEndsAt = (round as any).tickStartedAt + GUESS_WINDOW;
+  round.tickStartedAt = Date.now();
+  round.tickEndsAt = round.tickStartedAt + GUESS_WINDOW;
 
   // First reveal + tick 1
   revealRandomLetter(round.word, round.maskedWord);
@@ -30,13 +30,13 @@ export function startTickEngine(io: Server, matchId: string) {
     maskedWord: round.maskedWord,
     remainingReveals: countHidden(round.maskedWord),
     guessWindowMs: GUESS_WINDOW,
-    tickEndsAt: (round as any).tickEndsAt,
+    tickEndsAt: round.tickEndsAt,
   });
 
   round.tick = 1;
 
-  (round as any).tickInterval = setInterval(async () => {
-    const currentRound = getRound(matchId);
+  round.tickInterval = setInterval(async () => {
+    const currentRound = getRound(matchId) as RoundWithEngine;
 
     // Round replaced/removed -> stop this engine
     if (!currentRound || currentRound !== round) {
@@ -74,7 +74,7 @@ export function startTickEngine(io: Server, matchId: string) {
       return;
     }
 
-    // Fully revealed -> round over
+    // Fully revealed == round over
     if (allRevealed(round.maskedWord)) {
       round.isRoundOver = true;
       round.status = "completed";
@@ -82,8 +82,8 @@ export function startTickEngine(io: Server, matchId: string) {
 
       await completeRoundInDb(matchId);
       const match = getActiveMatch(matchId);
-      if (!(round as any).resultEmitted) {
-        (round as any).resultEmitted = true;
+      if (!round.resultEmitted) {
+        round.resultEmitted = true;
         io.to(matchId).emit("round_result", {
           winnerId: null,
           word: round.word,
@@ -119,8 +119,8 @@ export function startTickEngine(io: Server, matchId: string) {
     round.tick++;
     round.guessesThisTick.clear();
 
-    (round as any).tickStartedAt = Date.now();
-    (round as any).tickEndsAt = (round as any).tickStartedAt + GUESS_WINDOW;
+    round.tickStartedAt = Date.now();
+    round.tickEndsAt = round.tickStartedAt + GUESS_WINDOW;
 
     revealRandomLetter(round.word, round.maskedWord);
 
@@ -129,7 +129,7 @@ export function startTickEngine(io: Server, matchId: string) {
       maskedWord: round.maskedWord,
       remainingReveals: countHidden(round.maskedWord),
       guessWindowMs: GUESS_WINDOW,
-      tickEndsAt: (round as any).tickEndsAt,
+      tickEndsAt: round.tickEndsAt,
     });
   }, GUESS_WINDOW);
 }
@@ -138,7 +138,7 @@ async function resolveTickGuesses(
   io: Server,
   matchId: string,
 ): Promise<boolean> {
-  const round = getRound(matchId);
+  const round = getRound(matchId) as RoundWithEngine;
   const match = getActiveMatch(matchId);
   if (!round || !match) return false;
 
@@ -160,8 +160,8 @@ async function resolveTickGuesses(
 
     await completeRoundInDb(matchId);
 
-    if (!(round as any).resultEmitted) {
-      (round as any).resultEmitted = true;
+    if (!round.resultEmitted) {
+      round.resultEmitted = true;
       io.to(matchId).emit("round_result", {
         winnerId: null,
         word: round.word,
@@ -182,8 +182,8 @@ async function resolveTickGuesses(
 
   await completeRoundInDb(matchId);
 
-  if (!(round as any).resultEmitted) {
-    (round as any).resultEmitted = true;
+  if (!round.resultEmitted) {
+    round.resultEmitted = true;
     io.to(matchId).emit("round_result", {
       winnerId: winner.playerId,
       word: round.word,
@@ -192,12 +192,10 @@ async function resolveTickGuesses(
     });
   }
 
-  // IMPORTANT: do NOT emit match_end here.
-  // Scheduler will emit match_end immediately (delay 0) when score reaches TARGET_SCORE.
   return true;
 }
 
-function hardStopRound(round: any, matchId: string) {
+function hardStopRound(round: RoundWithEngine, matchId: string) {
   if (round.tickInterval) {
     clearInterval(round.tickInterval);
     round.tickInterval = undefined;

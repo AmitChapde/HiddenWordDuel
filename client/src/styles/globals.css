@@ -239,3 +239,12 @@ button:disabled {
   background: linear-gradient(to right, #22d3ee, #a855f7, #f43f5e);
   transition: width 0.1s linear;
 }
+
+.error-boundary-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 12px;
+}

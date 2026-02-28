@@ -12,7 +12,7 @@ export type ActiveMatch = {
   sockets: Map<string, string>;
   disconnectTimers: Map<string, NodeJS.Timeout>;
   scores: Record<string, number>;
-    hasStarted: boolean;
+  hasStarted: boolean;
   roundNumber: number;
   nextRoundScheduled?: boolean;
   nextRoundTimer?: NodeJS.Timeout | null;
@@ -51,3 +51,17 @@ export interface RoundState {
   winnerId: PlayerId | null | undefined;
   status: "active" | "completed";
 }
+
+export type RoundWithEngine = {
+  word: string;
+  maskedWord: string[];
+  tick: number;
+  isRoundOver: boolean;
+  status: string;
+  winnerId: string | null;
+  guessesThisTick: Map<string, TickGuess>;
+  tickInterval?: NodeJS.Timeout;
+  tickStartedAt?: number;
+  tickEndsAt?: number;
+  resultEmitted?: boolean;
+};

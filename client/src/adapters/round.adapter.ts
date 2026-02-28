@@ -5,4 +5,4 @@ export const maskedWordToTiles = (maskedWord: string[]): Tile[] => {
     letter: char === "_" ? "" : char,
     revealed: char !== "_",
   }));
-};
+};  
