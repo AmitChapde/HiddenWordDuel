@@ -108,12 +108,11 @@ const GamePage = () => {
       setPhase("MATCH_END");
     };
 
-    // RESILIENCE HANDLERS
+   
     const onPlayerRejoined = (payload: { playerId: string }) => {
       console.log("[RESILIENCE] Player rejoined:", payload.playerId);
       showNotice("Opponent reconnected");
-      // Opponent came back - UI is restored, no state change needed
-      // The match state is already there, just continue the current phase
+  
     };
 
     const onMatchAbandoned = () => {
