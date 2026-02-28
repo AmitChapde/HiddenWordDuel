@@ -7,6 +7,11 @@ export function createRound(round: RoundState) {
   activeRounds.set(round.matchId, round);
 }
 
+/**
+ * 
+ * @param matchId 
+ * @returns The RoundState object for the given matchId, or undefined if not found.
+ */
 export function getRound(matchId: MatchId) {
   return activeRounds.get(matchId);
 }

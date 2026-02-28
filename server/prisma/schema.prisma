@@ -27,7 +27,7 @@ model Player {
   guesses  Guess[] @relation("guesses")
 
   wonRounds  Round[] @relation("winner")
-  wonMatches Match[] @relation("matchWinner")
+  wonMatches Match[] @relation("matchWinner") 
 }
 
 model Match {

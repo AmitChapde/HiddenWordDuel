@@ -26,6 +26,7 @@ import { scheduleNextRound } from "../game/round.scheduler.js";
 import { getRound, removeRound } from "../game/round.store.js";
 import { handleGuess } from "../game/guess.handler.js";
 import { completeRoundInDb } from "../game/round.service.js";
+import { ActiveMatch } from "../../types/types.js";
 
 export function registerGameSockets(io: Server) {
   io.on("connection", (socket: Socket) => {
@@ -39,7 +40,7 @@ export function registerGameSockets(io: Server) {
         socket.data.playerId = player.id;
         socket.data.username = player.username;
 
-        // Reconnect handling
+        // Reconnection handling
         const existingMatch = findMatchByPlayer(player.id);
         if (existingMatch) {
           console.log("Reconnecting player:", player.username);
@@ -82,9 +83,11 @@ export function registerGameSockets(io: Server) {
         const [p1, p2] = pair;
 
         try {
+          //Db entry for match
           const match = await createMatch(p1.playerId, p2.playerId);
-          const roomId = match.id;
+          const roomId = match.id;  
 
+          //live in-memory match 
           createActiveMatch(roomId, p1.playerId, p2.playerId);
           const active = getActiveMatch(roomId)!;
 
@@ -105,9 +108,10 @@ export function registerGameSockets(io: Server) {
           socket1.join(roomId);
           socket2.join(roomId);
 
+          // Emit match found to both players with their opponent's info
           io.to(roomId).emit("match_found", {
-            roomId, // keeping your existing client payload
-            matchId: roomId, // also provide matchId to reduce confusion
+            roomId, 
+            matchId: roomId, 
             players: [
               { id: p1.playerId, username: p1.username },
               { id: p2.playerId, username: p2.username },
@@ -125,6 +129,7 @@ export function registerGameSockets(io: Server) {
       }
     });
 
+    // Ready handler
     socket.on("ready", () => {
       // fallback if socket.data.matchId not present for any reason
       const matchId =
@@ -152,6 +157,7 @@ export function registerGameSockets(io: Server) {
         totalPlayers: match.players.length,
       });
 
+      // If all players are ready, start the round
       if (getReadyPlayers(matchId).size === match.players.length) {
         match.hasStarted = true;
         clearReady(matchId);
@@ -213,6 +219,7 @@ export function registerGameSockets(io: Server) {
           console.log("Both players disconnected — ending match");
           io.to(match.matchId).emit("match_abandoned");
 
+          // Mark round as completed with no winner
           const round = getRound(match.matchId);
           if (round && !round.isRoundOver) {
             round.isRoundOver = true;
@@ -221,6 +228,7 @@ export function registerGameSockets(io: Server) {
             await completeRoundInDb(match.matchId);
           }
 
+          // Mark match as abandoned in DB
           const liveMatch = getActiveMatch(match.matchId);
           if (liveMatch) {
             const { score1, score2 } = computeDbScores(liveMatch);
@@ -231,15 +239,17 @@ export function registerGameSockets(io: Server) {
             });
           }
 
+          // Cleanup in-memory state
           cleanupRuntimeRound(match.matchId);
           removeActiveMatch(match.matchId);
           return;
         }
 
         console.log("Starting grace timer for player:", playerId);
-
+        
         if (match.disconnectTimers.has(playerId)) return;
 
+        // Start a timer to forfeit the match if the player doesn't reconnect within the grace period
         const timer = setTimeout(async () => {
           try {
             console.log("Forfeit triggered for:", playerId);
@@ -294,7 +304,7 @@ function cleanupRuntimeRound(matchId: string) {
   removeRound(matchId);
 }
 
-function computeDbScores(match: any) {
+function computeDbScores(match: ActiveMatch) {
   const score1 = match.scores?.[match.player1Id] ?? 0;
   const score2 = match.scores?.[match.player2Id] ?? 0;
   return { score1, score2 };

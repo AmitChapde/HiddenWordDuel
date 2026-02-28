@@ -47,6 +47,7 @@ export async function initRoundInDb(matchId: string, roundState: RoundState) {
   }
 }
 
+// This function should be called when a round ends to persist the final state to the database.
 export async function completeRoundInDb(matchId: string) {
   const match = getActiveMatch(matchId);
   const round = getRound(matchId);

@@ -3,6 +3,14 @@ import { getRound } from "./round.store.js";
 import { persistGuess } from "./guess.service.js";
 import { getActiveMatch } from "../match/activeMatch.store.js";
 
+/** This handler is responsible for processing player guesses during an active round.
+ * @param io - The Socket.IO server instance for emitting events.
+ * @param matchId - The ID of the match the guess belongs to.
+ * @param playerId - The ID of the player making the guess.
+ * @param guess - The player's guess as a string.
+ * @returns void
+*/
+
 export async function handleGuess(
   io: Server,
   matchId: string,
@@ -44,7 +52,7 @@ export async function handleGuess(
   const isCorrect = normalizedGuess === round.word;
   const roundId = round.id;
 
-  // 3. Save to Database (Keeping your existing logic)
+  // 3. Save to Database 
   await persistGuess({
     roundId,
     playerId,

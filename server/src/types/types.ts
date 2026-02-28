@@ -15,7 +15,7 @@ export type ActiveMatch = {
     hasStarted: boolean;
   roundNumber: number;
   nextRoundScheduled?: boolean;
-    nextRoundTimer?: NodeJS.Timeout | null;
+  nextRoundTimer?: NodeJS.Timeout | null;
 };
 
 export type PlayerId = string;
@@ -35,7 +35,7 @@ export interface TickGuess {
 }
 
 export interface RoundState {
-   id: string;
+  id: string;
   matchId: MatchId;
   word: string;
   maskedWord: string[];

@@ -3,6 +3,11 @@ import { ActiveMatch } from "../../types/types.js";
 const activeMatches = new Map<string, ActiveMatch>();
 const playerToMatch = new Map<string, string>();
 
+/**
+ * Creates a new active match and stores it in memory.
+ * @param matchId - Unique identifier for the match.
+ * @param player1Id - ID of the first player.
+ */
 export function createActiveMatch(
   matchId: string,
   player1Id: string,
@@ -33,10 +38,20 @@ export function createActiveMatch(
 
   players.forEach((pid) => playerToMatch.set(pid, matchId));
 }
+/**
+ *
+ * @param matchId
+ * @returns The active match object for the given matchId, or undefined if not found.
+ */
 
 export function getActiveMatch(matchId: string): ActiveMatch | undefined {
   return activeMatches.get(matchId);
 }
+/**
+ * Finds the active match for a given player ID.
+ * @param playerId
+ * @returns The active match object for the given player ID, or null if not found.
+ */
 
 export function findMatchByPlayer(playerId: string): ActiveMatch | null {
   const matchId = playerToMatch.get(playerId);
@@ -52,4 +67,3 @@ export function removeActiveMatch(matchId: string) {
   if (match.nextRoundTimer) clearTimeout(match.nextRoundTimer);
   activeMatches.delete(matchId);
 }
-
