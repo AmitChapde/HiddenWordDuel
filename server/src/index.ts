@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
-import { prisma } from "../src/config/prisma.js";
+import { prisma } from "./config/prisma.js";
 import { registerGameSockets } from "./modules/sockets/game.socket.js";
 
 dotenv.config();
