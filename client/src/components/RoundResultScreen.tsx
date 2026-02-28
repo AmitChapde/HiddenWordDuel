@@ -11,9 +11,8 @@ const RoundResultScreen = ({ result }: Props) => {
 
   const winnerId = result.winnerId;
 
-  const player = match.players.find(
-    (p) => p.id === winnerId || p.id === winnerId,
-  );
+  // Find player matching winnerId (or null for draw)
+  const player = match.players.find((p) => p.id === winnerId);
 
   const winnerName = player?.username ?? "Draw";
   console.log("SCORES IN CONTEXT", match.scores);

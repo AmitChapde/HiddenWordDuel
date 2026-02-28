@@ -1,40 +1,64 @@
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #0f172a;
-  color: white;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: radial-gradient(circle at top, #1e1b4b, #020617);
+  color: #e2e8f0;
+  min-height: 100vh;
 }
 
-
 input {
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: rgba(30, 41, 59, 0.5); 
+  color: white;
   font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus {
+  border-color: #22d3ee; 
 }
 
 button {
-  padding: 10px 16px;
-  background: #22c55e;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #22d3ee, #0ea5e9); 
+  color: #020617;
   border: none;
-  border-radius: 6px;
-  font-weight: bold;
+  border-radius: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(34, 211, 238, 0.5);
+}
+
+button:active {
+  transform: translateY(0);
 }
 
 button:disabled {
-  background: gray;
+  background: #334155;
+  color: #64748b;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
-/* Lobby  */
+/* Lobby */
 .lobby-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 /* Game */
@@ -43,86 +67,87 @@ button:disabled {
   text-align: center;
 }
 
-
 /* Tile */
 .tile-grid {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
-  margin: 20px 0;
+  margin: 30px 0;
 }
 
 .tile {
-  width: 50px;
-  height: 50px;
-  background: #1e293b;
+  width: 60px;
+  height: 60px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 2px solid #334155;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  font-weight: bold;
-  border-radius: 8px;
+  font-size: 24px;
+  font-weight: 900;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tile.revealed {
-  background: #22c55e;
-  color: black;
+  background: #a855f7; 
+  border-color: #c084fc;
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+  transform: scale(1.05);
 }
 
 /* Notification */
 .system-notice {
-  background: #facc15;
-  color: black;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin: 10px auto;
+  background: rgba(251, 191, 36, 0.1); 
+  border: 1px solid #fbbf24;
+  color: #fbbf24;
+  padding: 10px 20px;
+  border-radius: 99px; 
+  margin: 20px auto;
   width: fit-content;
-  font-weight: 500;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
 }
 
-
-/* Guess  */
+/* Guess */
 .guess-box {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: center;
-  margin-top: 12px;
-}
-
-.guess-box input {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
+  margin-top: 20px;
 }
 
 .guess-box button {
-  background: #38bdf8;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}   
-
-/* Round Result */
-
-.round-result {
-  margin-top: 12px;
-  font-weight: bold;
-  color: #facc15;
+  background: linear-gradient(135deg, #f472b6, #db2777); 
+  color: white;
+  box-shadow: 0 0 15px rgba(244, 114, 182, 0.3);
 }
 
-/* timebar */
+/* Round Result */
+.round-result {
+  margin-top: 15px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #22d3ee;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
 
+/* Timebar */
 .timebar {
-  height: 6px;
-  background: #1f2937;
-  border-radius: 6px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
   overflow: hidden;
-  margin: 10px 0;
+  margin: 20px auto;
+  width: 300px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .timebar-fill {
   height: 100%;
-  background: linear-gradient(to right, #22c55e, #ef4444);
+  background: linear-gradient(to right, #22d3ee, #a855f7, #f43f5e);
   transition: width 0.1s linear;
 }

@@ -126,11 +126,7 @@ const GamePage = () => {
         finalScores: {},
       } as MatchEndPayload);
 
-      setMatch((prev) => {
-        if (!prev) return prev;
-        return prev; // Preserve final scores already set
-      });
-
+      // No need to update match state - match state already contains necessary info
       setPhase("MATCH_END");
     };
 
@@ -144,11 +140,7 @@ const GamePage = () => {
         finalScores: {},
       } as MatchEndPayload);
 
-      setMatch((prev) => {
-        if (!prev) return prev;
-        return prev; // Preserve scores set from final round result
-      });
-
+      // No need to update match state - match state already contains necessary info
       setPhase("MATCH_END");
     };
 

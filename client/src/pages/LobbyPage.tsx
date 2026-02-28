@@ -3,7 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { socket } from "../socket/socket";
 import { useGameContext } from "../contexts/GameContext";
 import { SOCKET_EVENTS } from "../socket/events";
+import SystemNotice from "../components/SystemNotice";
 import type { MatchFoundPayload, ReconnectPayload } from "../types/socket";
+
+// Helper to normalize player data from payloads
+const normalizePlayerData = (players: Array<{ id: string; username: string }>) =>
+  players.map((p) => ({
+    id: p.id,
+    username: p.username,
+  }));
 
 const LobbyPage = () => {
   const navigate = useNavigate();
@@ -12,6 +20,7 @@ const LobbyPage = () => {
   const [username, setUsername] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [status, setStatus] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const handleWaiting = () => {
@@ -24,24 +33,16 @@ const LobbyPage = () => {
 
       setMatch({
         matchId: payload.matchId,
-        players: payload.players.map((player) => ({
-          id: player.id,
-          username: player.username,
-        })),
+        players: normalizePlayerData(payload.players),
       });
 
       navigate("/game");
     };
 
     const handleReconnect = (payload: ReconnectPayload) => {
-      const players = payload.players.map((p) => ({
-        id: p.id,
-        username: p.username,
-      }));
-
       setMatch({
         matchId: payload.matchId,
-        players,
+        players: normalizePlayerData(payload.players),
       });
 
       navigate("/game");
@@ -59,7 +60,11 @@ const LobbyPage = () => {
   }, [navigate, setMatch]);
 
   const handleFindMatch = () => {
-    if (!username.trim()) return;
+    if (!username.trim()) {
+      setNotice("Please enter a username to find a match!");
+      setTimeout(() => setNotice(null), 3000);
+      return;
+    }
 
     if (!socket.connected) socket.connect();
 
@@ -72,6 +77,8 @@ const LobbyPage = () => {
   return (
     <div className="lobby-container">
       <h1>LexiClash</h1>
+
+      <SystemNotice message={notice} />
 
       <input
         placeholder="Enter username"
