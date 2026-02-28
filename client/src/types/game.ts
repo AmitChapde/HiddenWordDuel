@@ -19,7 +19,6 @@ export interface RoundState {
 export interface MatchState {
   matchId: string;
   players: Player[];
-  status: string;
   currentRound?: RoundState;
   scores?: Record<string, number>;
 }

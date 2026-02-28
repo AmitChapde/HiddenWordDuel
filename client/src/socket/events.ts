@@ -15,8 +15,11 @@ export const SOCKET_EVENTS = {
   // Runtime
   ROUND_START: "round_start",
   TICK: "tick_update",
-  ROUND_END: "round_end",
+  ROUND_RESULT: "round_result",
   MATCH_END: "match_end",
   MATCH_FORFEIT: "match_forfeit",
   MATCH_ABANDONED: "match_abandoned",
+
+  // Resilience
+  PLAYER_REJOINED: "player_rejoined",
 };

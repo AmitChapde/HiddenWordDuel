@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { socket } from "../socket/socket";
+import { SOCKET_EVENTS } from "../socket/events";
 import { useGameContext } from "../contexts/GameContext";
 import RoundPlaying from "../components/RoundPlaying";
 import RoundResultScreen from "../components/RoundResultScreen";
 import MatchEndScreen from "../components/MatchEndScreen";
 import ReadyScreen from "../components/ReadyScreen";
+import SystemNotice from "../components/SystemNotice";
 import { maskedWordToTiles } from "../adapters/round.adapter";
 import type {
   RoundStartPayload,
@@ -26,6 +28,12 @@ const GamePage = () => {
   const [hasGuessed, setHasGuessed] = useState(false);
   const [roundResult, setRoundResult] = useState<RoundResultPayload|null>(null);
   const [matchEndPayload, setMatchEndPayload] =   useState<MatchEndPayload | null>(null);
+  const [systemMessage, setSystemMessage] = useState<string | null>(null);
+
+  const showNotice = (msg: string, duration = 3000) => {
+    setSystemMessage(msg);
+    setTimeout(() => setSystemMessage(null), duration);
+  };
 
   useEffect(() => {
     const onRoundStart = (payload: RoundStartPayload) => {
@@ -100,16 +108,66 @@ const GamePage = () => {
       setPhase("MATCH_END");
     };
 
-    socket.on("round_start", onRoundStart);
-    socket.on("tick_update", onTick);
-    socket.on("round_result", onRoundResult);
-    socket.on("match_end", onMatchEnd);
+    // RESILIENCE HANDLERS
+    const onPlayerRejoined = (payload: { playerId: string }) => {
+      console.log("[RESILIENCE] Player rejoined:", payload.playerId);
+      showNotice("Opponent reconnected");
+      // Opponent came back - UI is restored, no state change needed
+      // The match state is already there, just continue the current phase
+    };
+
+    const onMatchAbandoned = () => {
+      console.log("[RESILIENCE] Match abandoned - both players disconnected");
+      showNotice("Match abandoned due to disconnect");
+
+      setMatchEndPayload({
+        winner: null,
+        loser: null,
+        finalScores: {},
+      } as MatchEndPayload);
+
+      setMatch((prev) => {
+        if (!prev) return prev;
+        return prev; // Preserve final scores already set
+      });
+
+      setPhase("MATCH_END");
+    };
+
+    const onMatchForfeit = (payload: { winner: string; loser: string }) => {
+      console.log("[RESILIENCE] Match forfeited:", payload);
+      showNotice("Opponent disconnected. You win by forfeit.");
+
+      setMatchEndPayload({
+        winner: payload.winner,
+        loser: payload.loser,
+        finalScores: {},
+      } as MatchEndPayload);
+
+      setMatch((prev) => {
+        if (!prev) return prev;
+        return prev; // Preserve scores set from final round result
+      });
+
+      setPhase("MATCH_END");
+    };
+
+    socket.on(SOCKET_EVENTS.ROUND_START, onRoundStart);
+    socket.on(SOCKET_EVENTS.TICK, onTick);
+    socket.on(SOCKET_EVENTS.ROUND_RESULT, onRoundResult);
+    socket.on(SOCKET_EVENTS.MATCH_END, onMatchEnd);
+    socket.on(SOCKET_EVENTS.PLAYER_REJOINED, onPlayerRejoined);
+    socket.on(SOCKET_EVENTS.MATCH_ABANDONED, onMatchAbandoned);
+    socket.on(SOCKET_EVENTS.MATCH_FORFEIT, onMatchForfeit);
 
     return () => {
-      socket.off("round_start", onRoundStart);
-      socket.off("tick_update", onTick);
-      socket.off("round_result", onRoundResult);
-      socket.off("match_end", onMatchEnd);
+      socket.off(SOCKET_EVENTS.ROUND_START, onRoundStart);
+      socket.off(SOCKET_EVENTS.TICK, onTick);
+      socket.off(SOCKET_EVENTS.ROUND_RESULT, onRoundResult);
+      socket.off(SOCKET_EVENTS.MATCH_END, onMatchEnd);
+      socket.off(SOCKET_EVENTS.PLAYER_REJOINED, onPlayerRejoined);
+      socket.off(SOCKET_EVENTS.MATCH_ABANDONED, onMatchAbandoned);
+      socket.off(SOCKET_EVENTS.MATCH_FORFEIT, onMatchForfeit);
     };
   }, []);
 
@@ -127,6 +185,7 @@ const GamePage = () => {
 
   return (
     <div className="game-container">
+      <SystemNotice message={systemMessage} />
       <h2>Match {match.matchId.slice(0, 4)}</h2>
 
       {phase === "READY" && <ReadyScreen onReady={handleReady} />}

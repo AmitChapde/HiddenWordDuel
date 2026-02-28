@@ -28,7 +28,6 @@ const LobbyPage = () => {
           id: player.id,
           username: player.username,
         })),
-        status: "playing",
       });
 
       navigate("/game");
@@ -43,7 +42,6 @@ const LobbyPage = () => {
       setMatch({
         matchId: payload.matchId,
         players,
-        status: "playing",
       });
 
       navigate("/game");
