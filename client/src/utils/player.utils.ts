@@ -1,6 +1,13 @@
 import type { MatchState } from "../types/game";
 
-export const getWinnerName = (match: MatchState) => {
+export const getWinnerName = (match: MatchState, winnerId?: string | null) => {
+  //check if winnnerId is provided if match ended due to time running out, if so use that to determine winner instead of score-based logic
+  if (winnerId) {
+    const player = match.players.find((p) => p.id === winnerId);
+    return player?.username ?? "Unknown";
+  }
+
+  // Fall back to score-based logic for normal match completion
   if (!match.scores || Object.keys(match.scores).length === 0)
     return "No scores yet";
 

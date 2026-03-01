@@ -4,7 +4,7 @@ import { socket } from "../socket/socket";
 import { useGameContext } from "../contexts/GameContext";
 import { SOCKET_EVENTS } from "../socket/events";
 import SystemNotice from "../components/SystemNotice";
-import type { MatchFoundPayload, ReconnectPayload } from "../types/socket";
+import type { MatchFoundPayload } from "../types/socket";
 
 // Helper function to normalize player data from payloads
 const normalizePlayerData = (
@@ -15,6 +15,7 @@ const normalizePlayerData = (
     username: p.username,
   }));
 
+//Lobby Page where players enter their username and wait for a match to be found.
 const LobbyPage = () => {
   const navigate = useNavigate();
   const { setMatch } = useGameContext();
@@ -38,23 +39,12 @@ const LobbyPage = () => {
       navigate("/game");
     };
 
-    const handleReconnect = (payload: ReconnectPayload) => {
-      setMatch({
-        matchId: payload.matchId,
-        players: normalizePlayerData(payload.players),
-      });
-
-      navigate("/game");
-    };
-
     socket.on(SOCKET_EVENTS.WAITING, handleWaiting);
     socket.on(SOCKET_EVENTS.MATCH_FOUND, handleMatchFound);
-    socket.on(SOCKET_EVENTS.RECONNECTED, handleReconnect);
 
     return () => {
       socket.off(SOCKET_EVENTS.WAITING, handleWaiting);
       socket.off(SOCKET_EVENTS.MATCH_FOUND, handleMatchFound);
-      socket.off(SOCKET_EVENTS.RECONNECTED, handleReconnect);
     };
   }, [navigate, setMatch]);
 
@@ -89,7 +79,7 @@ const LobbyPage = () => {
         {isSearching ? "Searching..." : "Find Match"}
       </button>
 
-      {status && <p>{status}</p>}
+      {status && <p className="status">{status}</p>}
     </div>
   );
 };

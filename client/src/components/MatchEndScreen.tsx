@@ -7,13 +7,17 @@ interface Props {
   payload: MatchEndPayload | null;
 }
 
+/**
+ * the screen that shows at the end of a match, displaying the winner and offering a replay option
+ * 
+ */
 const MatchEndScreen = ({ payload }: Props) => {
   const navigate = useNavigate();
   const { match, setMatch } = useGameContext();
 
   if (!payload || !match) return null;
 
-  const winnerName = getWinnerName(match);
+  const winnerName = getWinnerName(match, payload.winner);
 
   const handleReplay = () => {
     setMatch(null);
@@ -24,7 +28,7 @@ const MatchEndScreen = ({ payload }: Props) => {
     <div className="match-end">
       <h1>🏆 Match Over</h1>
 
-      <p>Winner: {winnerName}</p>
+      <p>Winner Status : {winnerName}</p>
 
       <button onClick={handleReplay}>Play Again</button>
     </div>

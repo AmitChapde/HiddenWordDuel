@@ -1,5 +1,9 @@
 import { useGameContext } from "../contexts/GameContext";
 
+/**
+ * 
+  * The scoreboard component that displays the current scores of both players during a match.
+ */
 const Scoreboard = () => {
   const { match } = useGameContext();
   if (!match?.scores || match.players.length < 2) return null;

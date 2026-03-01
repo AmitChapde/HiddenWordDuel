@@ -26,10 +26,8 @@ export interface RoundResultPayload {
 }
 
 export interface MatchEndPayload {
+  winner: string | null;
+  loser: string | null;
   finalScores: Record<string, number>;
 }
 
-export interface ReconnectPayload {
-  matchId: string;
-  players: PlayerDTO[];
-}

@@ -5,6 +5,10 @@ interface Props {
   result: RoundResultPayload | null;
 }
 
+/**
+ * 
+ * screens displays result at the end of each round, showing the correct word and winner (or draw) before transitioning to the next round or match end
+ */
 const RoundResultScreen = ({ result }: Props) => {
   const { match } = useGameContext();
   if (!result || !match) return null;

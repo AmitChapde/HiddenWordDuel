@@ -1,4 +1,4 @@
-// Centralized definition of all Socket.IO event names used in the client application for consistent reference across components and services.
+// Centralized definition of all Socket.IO events
 
 export const SOCKET_EVENTS = {
   CONNECT: "connect",
@@ -8,7 +8,6 @@ export const SOCKET_EVENTS = {
   JOIN_LOBBY: "join_lobby",
   WAITING: "waiting_for_opponent",
   MATCH_FOUND: "match_found",
-  RECONNECTED: "reconnected",
 
   // Game
   READY: "ready",
@@ -21,7 +20,4 @@ export const SOCKET_EVENTS = {
   MATCH_END: "match_end",
   MATCH_FORFEIT: "match_forfeit",
   MATCH_ABANDONED: "match_abandoned",
-
- 
-
 };

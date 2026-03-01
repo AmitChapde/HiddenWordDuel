@@ -10,6 +10,10 @@ interface Props {
   onGuess: (guess: string) => void;
 }
 
+/**
+ *
+ * The main gameplay screen during a round, showing the current tiles, timer, player statuses, and guess input.
+ */
 const RoundPlaying = ({ hasGuessed, onGuess }: Props) => {
   const { match } = useGameContext();
   if (!match?.currentRound) return null;
@@ -28,9 +32,7 @@ const RoundPlaying = ({ hasGuessed, onGuess }: Props) => {
 
       <TileGrid tiles={round.tiles} />
 
-      {!hasGuessed && (
-        <GuessInput disabled={hasGuessed} onSubmit={onGuess} />
-      )}
+      {!hasGuessed && <GuessInput disabled={hasGuessed} onSubmit={onGuess} />}
     </div>
   );
 };

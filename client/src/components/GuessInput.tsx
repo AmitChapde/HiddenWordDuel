@@ -5,6 +5,10 @@ interface Props {
   onSubmit: (guess: string) => void;
 }
 
+/**
+ * 
+ * Input filed for players to submit their guesses during a round.
+ */
 const GuessInput = ({ disabled, onSubmit }: Props) => {
   const [value, setValue] = useState("");
 

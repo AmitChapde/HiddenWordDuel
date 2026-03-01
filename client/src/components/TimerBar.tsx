@@ -4,6 +4,9 @@ interface Props {
   endsAt: number;
 }
 
+/**
+ * visual timer bar 
+ */
 const TimeBar = ({ endsAt }: Props) => {
   const [percent, setPercent] = useState(100);
 

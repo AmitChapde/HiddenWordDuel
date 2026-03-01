@@ -1,4 +1,5 @@
 import { Server, Socket } from "socket.io";
+import { prisma } from "../../config/prisma.js";
 import { findOrCreatePlayer } from "../player/player.service.js";
 import {
   addToLobby,
@@ -28,7 +29,7 @@ import { completeRoundInDb } from "../game/round.service.js";
 import { ActiveMatch } from "../../types/types.js";
 
 /**
- * 
+ *
  * Registers All Socket.IO event handlers related to the game flow, including lobby management, match setup, player readiness, guess submission, and disconnection handling.
  */
 export function registerGameSockets(io: Server) {
@@ -196,7 +197,7 @@ export function registerGameSockets(io: Server) {
 
         if (match.disconnectTimers.has(playerId)) return;
 
-        // Start a timer to forfeit the match if the player doesn't reconnect within the grace period
+        // Start a timer to forfeit the match
         const timer = setTimeout(async () => {
           try {
             const liveMatch = getActiveMatch(match.matchId);
@@ -220,6 +221,14 @@ export function registerGameSockets(io: Server) {
               score2,
             });
 
+            // Override winner for disconnect forfeits.
+            // Avoided changing service logic to prevent lifecycle regressions.
+            // Can be moved to service layer later.
+            await prisma.match.update({
+              where: { id: match.matchId },
+              data: { winnerId },
+            });
+
             io.to(match.matchId).emit("match_forfeit", {
               loser: playerId,
               winner: winnerId,
@@ -230,7 +239,7 @@ export function registerGameSockets(io: Server) {
           } catch (err) {
             throw new Error("Error during match forfeit after disconnect");
           }
-        }, 10000);
+        }, 7000);
 
         match.disconnectTimers.set(playerId, timer);
         removeFromLobby(socket.id);
