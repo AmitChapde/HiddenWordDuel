@@ -2,22 +2,14 @@ import type { Player } from "../types/game";
 
 interface Props {
   players: Player[];
-  winnerId?: string;
 }
 
-const PlayerStatus = ({ players, winnerId }: Props) => {
+const PlayerStatus = ({ players }: Props) => {
   return (
     <div className="player-status">
       {players.map((player) => {
-        const isWinner = winnerId === player.id;
-
         return (
-          <div
-            key={player.id}
-            className={`player 
-              ${isWinner ? "winner" : ""} 
-            `}
-          >
+          <div key={player.id} className="player">
             {player.username}
           </div>
         );

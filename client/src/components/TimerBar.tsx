@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 
 interface Props {
   remainingMs: number;
+  tick?: number;
 }
 
 /**
  * visual timer bar that counts down from remaining milliseconds
  */
-const TimeBar = ({ remainingMs }: Props) => {
+const TimeBar = ({ remainingMs, tick }: Props) => {
   const [percent, setPercent] = useState(100);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ const TimeBar = ({ remainingMs }: Props) => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [remainingMs]);
+  }, [remainingMs, tick]);
 
   return (
     <div className="timebar">

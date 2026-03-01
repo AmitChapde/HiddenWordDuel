@@ -64,6 +64,7 @@ const GamePage = () => {
             ...prev.currentRound,
             tiles: maskedWordToTiles(payload.maskedWord),
             remainingMs: payload.remainingMs,
+            tick: payload.tick,
           },
         };
       });

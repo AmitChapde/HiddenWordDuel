@@ -10,6 +10,7 @@ export interface Tile {
 
 export interface RoundState {
   roundNumber: number;
+  tick?: number;
   tiles: Tile[];
   remainingMs: number;
 }

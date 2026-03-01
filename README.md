@@ -89,6 +89,8 @@ server/
 │   ├── config/
 │   │   └── prisma.ts
 │   ├── modules/
+│   │   ├── dictionary/
+│   │   │   └── word.dictionary.ts
 │   │   ├── game/
 │   │   │   ├── guess.handler.ts
 │   │   │   ├── guess.service.ts

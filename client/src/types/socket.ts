@@ -15,6 +15,7 @@ export interface RoundStartPayload {
 }
 
 export interface TickPayload {
+  tick: number;
   maskedWord: string[];
   remainingMs: number;
 }
