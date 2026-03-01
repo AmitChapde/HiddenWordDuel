@@ -12,6 +12,7 @@ import { completeRoundInDb } from "./round.service.js";
 const GUESS_WINDOW = 15000;
 import type { RoundWithEngine } from "../../types/types.js";
 
+// This file implements the tick engine that manages the timing of each round, including revealing letters, accepting guesses, and determining round outcomes based on time and player actions.
 export function startTickEngine(io: Server, matchId: string) {
   const round = getRound(matchId) as RoundWithEngine;
   if (!round) return;
@@ -35,10 +36,11 @@ export function startTickEngine(io: Server, matchId: string) {
 
   round.tick = 1;
 
+  // Main tick loop that runs every GUESS_WINDOW ms to advance the round state
   round.tickInterval = setInterval(async () => {
     const currentRound = getRound(matchId) as RoundWithEngine;
 
-    // Round replaced/removed -> stop this engine
+    // if Round is replaced/removed then stop 
     if (!currentRound || currentRound !== round) {
       hardStopRound(round, matchId);
       return;
@@ -61,12 +63,6 @@ export function startTickEngine(io: Server, matchId: string) {
           Object.values(currentMatch.scores).some(
             (s) => (s ?? 0) >= TARGET_SCORE,
           );
-        console.log("[tick] round ended -> scheduling next", {
-          matchId,
-          roundNumber: currentMatch.roundNumber,
-          scores: currentMatch.scores,
-          delay: shouldEndNow ? 0 : ROUND_BUFFER_MS,
-        });
 
         scheduleNextRound(io, currentMatch, shouldEndNow ? 0 : ROUND_BUFFER_MS);
       }
@@ -74,7 +70,7 @@ export function startTickEngine(io: Server, matchId: string) {
       return;
     }
 
-    // Fully revealed == round over
+    // if Fully revealed then round is over
     if (allRevealed(round.maskedWord)) {
       round.isRoundOver = true;
       round.status = "completed";
@@ -97,17 +93,12 @@ export function startTickEngine(io: Server, matchId: string) {
 
       const currentMatch = getActiveMatch(matchId);
       if (currentMatch) {
+        //if round ended due to full reveal, next round should start immediately since no one can guess anymore
         const shouldEndNow =
           currentMatch.roundNumber >= MAX_ROUNDS ||
           Object.values(currentMatch.scores).some(
             (s) => (s ?? 0) >= TARGET_SCORE,
           );
-        console.log("[tick] round ended -> scheduling next", {
-          matchId,
-          roundNumber: currentMatch.roundNumber,
-          scores: currentMatch.scores,
-          delay: shouldEndNow ? 0 : ROUND_BUFFER_MS,
-        });
 
         scheduleNextRound(io, currentMatch, shouldEndNow ? 0 : ROUND_BUFFER_MS);
       }
@@ -134,19 +125,21 @@ export function startTickEngine(io: Server, matchId: string) {
   }, GUESS_WINDOW);
 }
 
+//resolves guesses for the current tick, returns true if round ended due to a correct guess or draw
 async function resolveTickGuesses(
   io: Server,
   matchId: string,
 ): Promise<boolean> {
   const round = getRound(matchId) as RoundWithEngine;
   const match = getActiveMatch(matchId);
-  if (!round || !match) return false;
 
+  if (!round || !match) return false;
   if (round.isRoundOver) return false;
 
   const guesses = Array.from(round.guessesThisTick.values());
   if (!guesses.length) return false;
 
+  //if any correct guesses this tick, round is over - either draw or win depending on timestamps
   const correct = guesses.filter((g) => g.guess.toUpperCase() === round.word);
   if (!correct.length) return false;
 
@@ -195,6 +188,7 @@ async function resolveTickGuesses(
   return true;
 }
 
+//stops the tick engine for a round and cleans up state
 function hardStopRound(round: RoundWithEngine, matchId: string) {
   if (round.tickInterval) {
     clearInterval(round.tickInterval);
@@ -203,15 +197,17 @@ function hardStopRound(round: RoundWithEngine, matchId: string) {
 
   round.guessesThisTick.clear();
 
-  // Only remove if the stored round is THIS round instance
+  // Only remove if the stored round is this round instance
   const current = getRound(matchId);
   if (current === round) removeRound(matchId);
 }
 
+//helper function to count how many letters are still hidden
 function countHidden(masked: string[]) {
   return masked.filter((c) => c === "_").length;
 }
 
+//helper function to check if all letters are revealed
 function allRevealed(masked: string[]) {
   return !masked.includes("_");
 }

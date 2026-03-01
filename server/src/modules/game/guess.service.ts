@@ -1,5 +1,12 @@
 import { prisma } from "../../config/prisma.js";
-
+/**
+ * Persists a player's guess to the database.
+ * @param roundId - The ID of the round the guess belongs to.
+ * @param playerId - The ID of the player making the guess.
+ * @param guess - The player's guess as a string.
+ * @param isCorrect - A boolean indicating whether the guess was correct or not.
+ * @returns void
+ */
 export async function persistGuess({
   roundId,
   playerId,
@@ -12,7 +19,6 @@ export async function persistGuess({
   isCorrect: boolean;
 }) {
   try {
-    
     await prisma.guess.create({
       data: {
         roundId,
@@ -21,8 +27,7 @@ export async function persistGuess({
         isCorrect,
       },
     });
-     console.log("[persistGuess] success");
   } catch (err) {
-    console.error("Guess persistence failed:", err);
+    throw new Error("Failed to persist guess data to database");
   }
 }

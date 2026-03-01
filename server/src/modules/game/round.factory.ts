@@ -1,7 +1,12 @@
 import { RoundState } from "../../types/types.js";
 import { pickRandomWord, maskWord } from "./word.engine.js";
 import { randomUUID } from "crypto";
-
+/**
+ * creates the initial state for a new round
+ * @param matchId 
+ * @param playerIds 
+ * @returns The initial state for a new round
+ */
 export function createRoundState(
   matchId: string,
   playerIds: string[],

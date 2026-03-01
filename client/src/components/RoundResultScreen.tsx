@@ -15,9 +15,7 @@ const RoundResultScreen = ({ result }: Props) => {
   const player = match.players.find((p) => p.id === winnerId);
 
   const winnerName = player?.username ?? "Draw";
-  console.log("SCORES IN CONTEXT", match.scores);
-  console.log("winnerId", result.winnerId);
-  console.log("players", match.players);
+
 
   return (
     <div className="round-result">

@@ -8,13 +8,11 @@ export interface Tile {
   revealed: boolean;
 }
 
-
 export interface RoundState {
   roundNumber: number;
   tiles: Tile[];
   tickEndsAt: number;
 }
-
 
 export interface MatchState {
   matchId: string;
@@ -22,3 +20,10 @@ export interface MatchState {
   currentRound?: RoundState;
   scores?: Record<string, number>;
 }
+
+export type GamePhase =
+  | "LOBBY"
+  | "READY"
+  | "ROUND_PLAYING"
+  | "ROUND_RESULT"
+  | "MATCH_END";

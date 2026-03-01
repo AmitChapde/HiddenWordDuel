@@ -27,44 +27,17 @@ import { handleGuess } from "../game/guess.handler.js";
 import { completeRoundInDb } from "../game/round.service.js";
 import { ActiveMatch } from "../../types/types.js";
 
+/**
+ * 
+ * Registers All Socket.IO event handlers related to the game flow, including lobby management, match setup, player readiness, guess submission, and disconnection handling.
+ */
 export function registerGameSockets(io: Server) {
   io.on("connection", (socket: Socket) => {
-    console.log("User connected:", socket.id);
-
     socket.on("join_lobby", async ({ username }) => {
       try {
-        console.log("Join request from:", username);
-
         const player = await findOrCreatePlayer(username);
         socket.data.playerId = player.id;
         socket.data.username = player.username;
-
-        // Reconnection handling
-        const existingMatch = findMatchByPlayer(player.id);
-        if (existingMatch) {
-          console.log("Reconnecting player:", player.username);
-
-          existingMatch.sockets.set(player.id, socket.id);
-
-          const timer = existingMatch.disconnectTimers.get(player.id);
-          if (timer) {
-            clearTimeout(timer);
-            existingMatch.disconnectTimers.delete(player.id);
-          }
-
-          socket.data.matchId = existingMatch.matchId;
-          socket.join(existingMatch.matchId);
-
-          socket.emit("reconnected", {
-            matchId: existingMatch.matchId,
-            players: existingMatch.players,
-          });
-
-          socket.to(existingMatch.matchId).emit("player_rejoined", {
-            playerId: player.id,
-          });
-          return;
-        }
 
         // Normal lobby flow
         addToLobby({
@@ -84,9 +57,9 @@ export function registerGameSockets(io: Server) {
         try {
           //Db entry for match
           const match = await createMatch(p1.playerId, p2.playerId);
-          const roomId = match.id;  
+          const roomId = match.id;
 
-          //live in-memory match 
+          //live in-memory match
           createActiveMatch(roomId, p1.playerId, p2.playerId);
           const active = getActiveMatch(roomId)!;
 
@@ -109,21 +82,17 @@ export function registerGameSockets(io: Server) {
 
           // Emit match found to both players with their opponent's info
           io.to(roomId).emit("match_found", {
-            roomId, 
-            matchId: roomId, 
+            roomId,
+            matchId: roomId,
             players: [
               { id: p1.playerId, username: p1.username },
               { id: p2.playerId, username: p2.username },
             ],
           });
-
-          console.log(`Match created: ${roomId}`);
         } catch (err) {
-          console.error("Failed to create match or join rooms:", err);
           socket.emit("error", "Failed to create match. Please try again.");
         }
       } catch (err) {
-        console.error("Join lobby error:", err);
         socket.emit("error", "Failed to join lobby");
       }
     });
@@ -135,13 +104,13 @@ export function registerGameSockets(io: Server) {
         socket.data.matchId ?? findMatchByPlayer(socket.data.playerId)?.matchId;
 
       if (!matchId) {
-        console.log("[ready] no matchId for socket:", socket.id);
+        throw new Error("No matchId found for ready event");
         return;
       }
 
       const match = getActiveMatch(matchId);
       if (!match) {
-        console.log("[ready] no active match:", matchId);
+        throw new Error("No active match found for ready event");
         return;
       }
 
@@ -149,19 +118,10 @@ export function registerGameSockets(io: Server) {
 
       markPlayerReady(matchId, socket.data.playerId);
 
-      console.log("[ready]", {
-        matchId,
-        playerId: socket.data.playerId,
-        readyCount: getReadyPlayers(matchId).size,
-        totalPlayers: match.players.length,
-      });
-
       // If all players are ready, start the round
       if (getReadyPlayers(matchId).size === match.players.length) {
         match.hasStarted = true;
         clearReady(matchId);
-
-        console.log("[ready] BOTH READY -> starting round 1", { matchId });
 
         // Start Round 1 (immediately)
         scheduleNextRound(io, match, 0);
@@ -171,31 +131,22 @@ export function registerGameSockets(io: Server) {
       try {
         const playerId = socket.data.playerId;
 
-        console.log("[submit_guess]", {
-          socketId: socket.id,
-          playerId,
-          guess,
-        });
-
         if (!playerId || !guess) {
-          console.log("BLOCKED submit_guess");
-          return;
+          throw new Error("Missing playerId or guess in submit_guess event");
         }
 
         const match = findMatchByPlayer(playerId);
         if (!match) {
-          console.log("NO MATCH FOR PLAYER", playerId);
-          return;
+          throw new Error("No match found for player in submit_guess event");
         }
 
         await handleGuess(io, match.matchId, playerId, guess);
       } catch (err) {
-        console.error("Error in 'submit_guess' handler:", err);
+        throw new Error("Error handling guess submission");
       }
     });
     socket.on("disconnect", async () => {
       try {
-        console.log("User disconnected:", socket.id);
         const playerId = socket.data.playerId;
 
         if (!playerId) {
@@ -215,7 +166,6 @@ export function registerGameSockets(io: Server) {
         const opponentSocket = match.sockets.get(opponentId);
 
         if (!opponentSocket) {
-          console.log("Both players disconnected — ending match");
           io.to(match.matchId).emit("match_abandoned");
 
           // Mark round as completed with no winner
@@ -244,14 +194,11 @@ export function registerGameSockets(io: Server) {
           return;
         }
 
-        console.log("Starting grace timer for player:", playerId);
-        
         if (match.disconnectTimers.has(playerId)) return;
 
         // Start a timer to forfeit the match if the player doesn't reconnect within the grace period
         const timer = setTimeout(async () => {
           try {
-            console.log("Forfeit triggered for:", playerId);
             const liveMatch = getActiveMatch(match.matchId);
             if (!liveMatch) return;
 
@@ -281,19 +228,20 @@ export function registerGameSockets(io: Server) {
             cleanupRuntimeRound(match.matchId);
             removeActiveMatch(match.matchId);
           } catch (err) {
-            console.error("Error during forfeit cleanup:", err);
+            throw new Error("Error during match forfeit after disconnect");
           }
         }, 10000);
 
         match.disconnectTimers.set(playerId, timer);
         removeFromLobby(socket.id);
       } catch (err) {
-        console.error("Unexpected error in 'disconnect' handler:", err);
+        throw new Error("Unexpected error during disconnect handling");
       }
     });
   });
 }
 
+// Helper function to clean up in-memory round state and timers when a match ends
 function cleanupRuntimeRound(matchId: string) {
   const round = getRound(matchId);
   if (round?.tickInterval) {
@@ -303,6 +251,7 @@ function cleanupRuntimeRound(matchId: string) {
   removeRound(matchId);
 }
 
+// Helper function to compute current scores for both players in a match
 function computeDbScores(match: ActiveMatch) {
   const score1 = match.scores?.[match.player1Id] ?? 0;
   const score2 = match.scores?.[match.player2Id] ?? 0;

@@ -3,10 +3,10 @@ import { getActiveMatch } from "../match/activeMatch.store.js";
 import { getRound } from "./round.store.js";
 import { RoundState } from "../../types/types.js";
 
+// This file contains functions related to initializing and completing rounds, including database persistence.
 export async function initRoundInDb(matchId: string, roundState: RoundState) {
   const match = getActiveMatch(matchId);
   if (!match) {
-    console.warn(`[initRoundInDb] Match not found: ${matchId}`);
     return;
   }
 
@@ -26,7 +26,7 @@ export async function initRoundInDb(matchId: string, roundState: RoundState) {
         winnerId: null,
       },
       create: {
-         id: roundState.id,
+        id: roundState.id,
         matchId,
         roundNumber,
         word: roundState.word,
@@ -35,29 +35,20 @@ export async function initRoundInDb(matchId: string, roundState: RoundState) {
         status: "active",
       },
     });
-    console.log(
-      `[initRoundInDb] Round (match=${matchId}, r=${roundNumber}) upserted`,
-    );
-  } catch (err) {
-    console.error(
-      `[initRoundInDb] Failed to upsert round for match=${matchId} r=${roundNumber}:`,
-      err,
-    );
-    throw err;
+  } catch (err: any) {
+    throw new Error("Failed to initialize round in database", err);
   }
 }
 
-// This function should be called when a round ends to persist the final state to the database.
+// This function to persist the final state to the database.
 export async function completeRoundInDb(matchId: string) {
   const match = getActiveMatch(matchId);
   const round = getRound(matchId);
 
   if (!match) {
-    console.warn(`[completeRoundInDb] No active match found for ${matchId}`);
     return;
   }
   if (!round) {
-    console.warn(`[completeRoundInDb] No round found for ${matchId}`);
     return;
   }
 
@@ -96,9 +87,5 @@ export async function completeRoundInDb(matchId: string) {
         winner: { connect: { id: winnerId } },
       },
     });
-
-    console.log(
-      `[completeRoundInDb] Match ${matchId} completed. Winner: ${winnerId}`,
-    );
   }
 }

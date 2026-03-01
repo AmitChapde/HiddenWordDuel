@@ -7,6 +7,8 @@ const playerToMatch = new Map<string, string>();
  * Creates a new active match and stores it in memory.
  * @param matchId - Unique identifier for the match.
  * @param player1Id - ID of the first player.
+ * @param player2Id - ID of the second player.
+ * @returns void  
  */
 export function createActiveMatch(
   matchId: string,
@@ -38,6 +40,7 @@ export function createActiveMatch(
 
   players.forEach((pid) => playerToMatch.set(pid, matchId));
 }
+
 /**
  *
  * @param matchId
@@ -59,6 +62,9 @@ export function findMatchByPlayer(playerId: string): ActiveMatch | null {
   return activeMatches.get(matchId) || null;
 }
 
+/** Removes an active match from memory and cleans up any associated timers or references.
+ * @param matchId - The ID of the match to remove.
+ */
 export function removeActiveMatch(matchId: string) {
   const match = activeMatches.get(matchId);
   if (!match) return;

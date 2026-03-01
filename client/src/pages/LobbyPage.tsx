@@ -6,8 +6,10 @@ import { SOCKET_EVENTS } from "../socket/events";
 import SystemNotice from "../components/SystemNotice";
 import type { MatchFoundPayload, ReconnectPayload } from "../types/socket";
 
-// Helper to normalize player data from payloads
-const normalizePlayerData = (players: Array<{ id: string; username: string }>) =>
+// Helper function to normalize player data from payloads
+const normalizePlayerData = (
+  players: Array<{ id: string; username: string }>,
+) =>
   players.map((p) => ({
     id: p.id,
     username: p.username,
@@ -24,13 +26,10 @@ const LobbyPage = () => {
 
   useEffect(() => {
     const handleWaiting = () => {
-      console.log("Waiting for opponent...");
       setStatus("Waiting for opponent...");
     };
 
     const handleMatchFound = (payload: MatchFoundPayload) => {
-      console.log("🎉 Match found:", payload);
-
       setMatch({
         matchId: payload.matchId,
         players: normalizePlayerData(payload.players),

@@ -1,0 +1,17 @@
+export const WORDS = [
+  "APPLE",
+  "GRAPE",
+  "MANGO",
+  "BANANA",
+  "ORANGE",
+  "PAPAYA",
+  "PEACH",
+  "CHERRY",
+  "PEAR",
+  "PLUM",
+  "WATERMELON",
+  "STRAWBERRY",
+  "BLUEBERRY",
+  "RASPBERRY",
+  "BLACKBERRY",
+];

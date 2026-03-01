@@ -1,3 +1,4 @@
+
 export type WaitingPlayer = {
   socketId: string;
   playerId: string;

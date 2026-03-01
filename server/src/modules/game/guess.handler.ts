@@ -17,7 +17,6 @@ export async function handleGuess(
   playerId: string,
   guess: string,
 ) {
-  console.log("[handleGuess] fired", { matchId, playerId, guess });
   const round = getRound(matchId);
   // Safety check: prevent guesses if round is null or already finished
   if (!round || round.isRoundOver) return;
@@ -30,7 +29,7 @@ export async function handleGuess(
 
   const now = Date.now();
 
-  // Time-based validation
+  // Time-based validation for late guesses
   if (typeof round.tickEndsAt === "number" && now > round.tickEndsAt) {
     io.to(matchId).emit("guess_rejected", {
       playerId,

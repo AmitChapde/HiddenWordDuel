@@ -13,7 +13,7 @@ const MatchEndScreen = ({ payload }: Props) => {
 
   if (!payload || !match) return null;
 
-  const winnerName=getWinnerName(match);
+  const winnerName = getWinnerName(match);
 
   const handleReplay = () => {
     setMatch(null);

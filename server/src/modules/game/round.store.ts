@@ -3,15 +3,13 @@ import { RoundState } from "../../types/types.js";
 
 const activeRounds = new Map<MatchId, RoundState>();
 
+// This file contains functions for managing the in-memory state of active rounds, including creating, retrieving, and removing rounds.
+
+
 export function createRound(round: RoundState) {
   activeRounds.set(round.matchId, round);
 }
 
-/**
- * 
- * @param matchId 
- * @returns The RoundState object for the given matchId, or undefined if not found.
- */
 export function getRound(matchId: MatchId) {
   return activeRounds.get(matchId);
 }

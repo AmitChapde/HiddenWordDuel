@@ -13,6 +13,7 @@ export const ROUND_BUFFER_MS = 3000;
 export const MAX_ROUNDS = 5;
 export const TARGET_SCORE = 3;
 
+//gets the winner based on current scores, returns null if tie
 function getWinnerByScore(match: ActiveMatch): string | null {
   const [p1, p2] = match.players;
   const s1 = match.scores[p1] ?? 0;
@@ -24,6 +25,13 @@ function getWinnerByScore(match: ActiveMatch): string | null {
 function hasReachedTargetScore(match: ActiveMatch): boolean {
   return Object.values(match.scores).some((s) => (s ?? 0) >= TARGET_SCORE);
 }
+
+/**
+ * @param io - The Socket.IO server instance for emitting events.
+ * @param match - The active match for which to schedule the next round.
+ * @param delayMs - Optional delay in milliseconds before starting the next round
+ * @returns void
+ */
 
 export function scheduleNextRound(
   io: Server,
@@ -41,7 +49,6 @@ export function scheduleNextRound(
       const currentMatch = getActiveMatch(match.matchId);
       if (!currentMatch) return;
 
-      // End conditions (emit match_end from HERE only)
       if (
         currentMatch.roundNumber >= MAX_ROUNDS ||
         hasReachedTargetScore(currentMatch)
@@ -80,20 +87,14 @@ export function scheduleNextRound(
         roundNumber: currentMatch.roundNumber,
         wordLength: round.word.length,
       });
-      console.log("[scheduler] fired", {
-        matchId: currentMatch.matchId,
-        roundNumber: currentMatch.roundNumber,
-        scores: currentMatch.scores,
-        nextRoundScheduled: currentMatch.nextRoundScheduled,
-      });
 
       startTickEngine(io, currentMatch.matchId);
     } catch (err) {
-      console.error("[scheduleNextRound] failed:", err);
       io.to(match.matchId).emit("server_error", {
         message: "Failed to start next round.",
       });
     } finally {
+      //ensures that even if there was an error, the nextRoundScheduled flag is reset so future rounds can be attempted
       const m = getActiveMatch(match.matchId);
       if (m) {
         m.nextRoundScheduled = false;

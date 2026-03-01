@@ -1,3 +1,5 @@
+// Centralized definition of all Socket.IO event names used in the client application for consistent reference across components and services.
+
 export const SOCKET_EVENTS = {
   CONNECT: "connect",
   DISCONNECT: "disconnect",
@@ -20,6 +22,6 @@ export const SOCKET_EVENTS = {
   MATCH_FORFEIT: "match_forfeit",
   MATCH_ABANDONED: "match_abandoned",
 
-  // Resilience
-  PLAYER_REJOINED: "player_rejoined",
+ 
+
 };
