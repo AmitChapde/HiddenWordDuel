@@ -11,7 +11,7 @@ export interface Tile {
 export interface RoundState {
   roundNumber: number;
   tiles: Tile[];
-  tickEndsAt: number;
+  remainingMs: number;
 }
 
 export interface MatchState {

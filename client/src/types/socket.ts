@@ -16,7 +16,7 @@ export interface RoundStartPayload {
 
 export interface TickPayload {
   maskedWord: string[];
-  tickEndsAt: number;
+  remainingMs: number;
 }
 
 export interface RoundResultPayload {

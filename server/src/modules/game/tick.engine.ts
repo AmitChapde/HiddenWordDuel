@@ -31,7 +31,7 @@ export function startTickEngine(io: Server, matchId: string) {
     maskedWord: round.maskedWord,
     remainingReveals: countHidden(round.maskedWord),
     guessWindowMs: GUESS_WINDOW,
-    tickEndsAt: round.tickEndsAt,
+    remainingMs: GUESS_WINDOW,
   });
 
   round.tick = 1;
@@ -120,7 +120,7 @@ export function startTickEngine(io: Server, matchId: string) {
       maskedWord: round.maskedWord,
       remainingReveals: countHidden(round.maskedWord),
       guessWindowMs: GUESS_WINDOW,
-      tickEndsAt: round.tickEndsAt,
+      remainingMs: GUESS_WINDOW,
     });
   }, GUESS_WINDOW);
 }

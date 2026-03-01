@@ -43,7 +43,7 @@ const GamePage = () => {
           currentRound: {
             roundNumber: payload.roundNumber,
             tiles,
-            tickEndsAt: Date.now() + 15000,
+            remainingMs: 15000,
           },
         };
       });
@@ -63,7 +63,7 @@ const GamePage = () => {
           currentRound: {
             ...prev.currentRound,
             tiles: maskedWordToTiles(payload.maskedWord),
-            tickEndsAt: payload.tickEndsAt,
+            remainingMs: payload.remainingMs,
           },
         };
       });

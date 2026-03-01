@@ -1,27 +1,28 @@
 import { useState, useEffect } from "react";
 
 interface Props {
-  endsAt: number;
+  remainingMs: number;
 }
 
 /**
- * visual timer bar 
+ * visual timer bar that counts down from remaining milliseconds
  */
-const TimeBar = ({ endsAt }: Props) => {
+const TimeBar = ({ remainingMs }: Props) => {
   const [percent, setPercent] = useState(100);
 
   useEffect(() => {
-    const start = Date.now();
-    const total = Math.max(endsAt - start, 1);
+    const startTime = Date.now();
+    const totalMs = Math.max(remainingMs, 1);
 
     const interval = setInterval(() => {
-      const remaining = Math.max(endsAt - Date.now(), 0);
-      const p = (remaining / total) * 100;
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(totalMs - elapsed, 0);
+      const p = (remaining / totalMs) * 100;
       setPercent(p);
     }, 100);
 
     return () => clearInterval(interval);
-  }, [endsAt]);
+  }, [remainingMs]);
 
   return (
     <div className="timebar">

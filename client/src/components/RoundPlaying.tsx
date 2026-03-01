@@ -28,7 +28,7 @@ const RoundPlaying = ({ hasGuessed, onGuess }: Props) => {
 
       <h3>Round {round.roundNumber}</h3>
 
-      <TimeBar endsAt={round.tickEndsAt} />
+      <TimeBar remainingMs={round.remainingMs} />
 
       <TileGrid tiles={round.tiles} />
 
